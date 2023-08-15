@@ -15,8 +15,11 @@ Some message.`);
       text: 'Some message.',
       from: 'A <a@example.com>',
       to: ['B <b@example.com>'],
+      sender: 'a@example.com',
+      recipient: ['b@example.com'],
       subject: 'Hello world!',
       date: new Date('Wed, 01 Apr 2020 00:00:00 -0000'),
+      timestamp: 1585699200000,
     });
   });
 

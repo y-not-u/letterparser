@@ -13,7 +13,9 @@ export interface LetterparserMail {
   cc?: string[];
   bcc?: string[];
   date?: Date;
+  timestamp?: number;
   from?: string;
+  sender?: string;
   attachments?: LetterparserAttachment[];
 
   /**
@@ -83,10 +85,12 @@ function extractBody(node: LetterparserNode) {
   return [text, html, amp, attachments] as const;
 }
 
-function extractMailFromTo(str: string): string | null {
+function extractMailAddress(str?: string): string | undefined {
+  if (!str) return undefined;
+
   const emailRegex = /<([^>]+)>/;
   const matches = str.match(emailRegex);
-  const email = matches ? matches[1] : null;
+  const email = matches ? matches[1] : undefined;
   return email;
 }
 
@@ -99,7 +103,7 @@ export function extractMail(node: LetterparserNode): LetterparserMail {
 
   if ('To' in node.headers) {
     mail.to = node.headers['To']?.split(',').map(s => s.trim());
-    mail.recipient = mail.to?.map(s => extractMailFromTo(s)).filter(notEmpty);
+    mail.recipient = mail.to?.map(s => extractMailAddress(s)).filter(notEmpty);
   }
 
   if ('Cc' in node.headers) {
@@ -112,6 +116,7 @@ export function extractMail(node: LetterparserNode): LetterparserMail {
 
   if ('From' in node.headers) {
     mail.from = node.headers['From'];
+    mail.sender = extractMailAddress(mail.from);
   }
 
   if ('Subject' in node.headers) {
@@ -120,6 +125,7 @@ export function extractMail(node: LetterparserNode): LetterparserMail {
 
   if ('Date' in node.headers && typeof node.headers['Date'] === 'string') {
     mail.date = new Date(node.headers['Date']);
+    mail.timestamp = mail.date.getTime();
   }
 
   const [text, html, amp, attachments] = extractBody(node);
