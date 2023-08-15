@@ -9,6 +9,7 @@ export interface LetterparserAttachment {
 export interface LetterparserMail {
   subject?: string;
   to?: string[];
+  recipient?: string[];
   cc?: string[];
   bcc?: string[];
   date?: Date;
@@ -82,11 +83,23 @@ function extractBody(node: LetterparserNode) {
   return [text, html, amp, attachments] as const;
 }
 
+function extractMailFromTo(str: string): string | null {
+  const emailRegex = /<([^>]+)>/;
+  const matches = str.match(emailRegex);
+  const email = matches ? matches[1] : null;
+  return email;
+}
+
+function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
+  return value !== null && value !== undefined;
+}
+
 export function extractMail(node: LetterparserNode): LetterparserMail {
   const mail: LetterparserMail = {};
 
   if ('To' in node.headers) {
     mail.to = node.headers['To']?.split(',').map(s => s.trim());
+    mail.recipient = mail.to?.map(s => extractMailFromTo(s)).filter(notEmpty);
   }
 
   if ('Cc' in node.headers) {
