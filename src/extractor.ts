@@ -85,13 +85,29 @@ function extractBody(node: LetterparserNode) {
   return [text, html, amp, attachments] as const;
 }
 
+function checkEmail(email?: string) {
+  if (!email) return false;
+
+  const emailRegex = /^[a-zA-Z0-9._-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$/;
+  return emailRegex.test(email);
+}
+
 function extractMailAddress(str?: string): string | undefined {
   if (!str) return undefined;
 
-  const emailRegex = /<([^>]+)>/;
-  const matches = str.match(emailRegex);
-  const email = matches ? matches[1] : undefined;
-  return email;
+  // match `test@example.com`
+  if (checkEmail(str)) {
+    return str;
+  }
+
+  // match `test <test@example.com>`
+  if (/<([^>]+)>/.test(str)) {
+    const matches = str.match(/<([^>]+)>/);
+    const email = matches ? matches[1] : undefined;
+    return checkEmail(email) ? email : undefined;
+  }
+
+  return undefined;
 }
 
 function notEmpty<TValue>(value: TValue | null | undefined): value is TValue {
